@@ -651,6 +651,7 @@
 
 
           this.color = strokes.color;
+          this.ctx.strokeStyle = this.color;
 
           for (var j = 0; j < strokes.pointsStrokes.length; j++) {
             if (j > 0) {
@@ -668,12 +669,23 @@
               })();
             }
           }
+
+          this.sleep(100);
         } // 还原为当前颜色
 
 
         this.color = color; // 重画结束
 
         this.canDraw = false;
+      }
+    }, {
+      key: "sleep",
+      value: function sleep(delay) {
+        var start = new Date().getTime();
+
+        while (new Date().getTime() - start < delay) {
+          continue;
+        }
       } // ==================================== 绘画算法：开始 ==================================== //
 
     }]);

@@ -321,6 +321,7 @@ class SmoothSignature {
       }
       // 重画时设置颜色
       this.color = strokes.color;
+      this.ctx.strokeStyle = this.color;
       for(var j = 0; j < strokes.pointsStrokes.length; j++) {
         if(j > 0) {
           const point = strokes.pointsStrokes[j];
@@ -332,12 +333,20 @@ class SmoothSignature {
           }
         }
       }
+      this.sleep(100);
     }
     // 还原为当前颜色
     this.color = color;
 
     // 重画结束
     this.canDraw = false;
+  }
+
+  sleep(delay: number) {
+    const start = (new Date()).getTime();
+    while ((new Date()).getTime() - start < delay) {
+      continue;
+    }
   }
 
   // ==================================== 绘画算法：开始 ==================================== //

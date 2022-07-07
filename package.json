@@ -25,13 +25,13 @@
     "build": "father build",
     "watch": "father build --watch"
   },
-  "homepage": "https://github.com/linjc/smooth-signature",
+  "homepage": "https://github.com/waztyzdj/smooth-signature",
   "repository": {
     "type": "git",
-    "url": "https://github.com/linjc/smooth-signature.git"
+    "url": "https://github.com/waztyzdj/smooth-signature.git"
   },
   "bugs": {
-    "url": "https://github.com/linjc/smooth-signature/issues"
+    "url": "https://github.com/waztyzdj/smooth-signature/issues"
   },
   "license": "MIT",
   "devDependencies": {
