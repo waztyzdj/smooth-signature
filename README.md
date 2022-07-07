@@ -20,7 +20,11 @@
 ## 安装
 
 ### 编译
+```
+npm install
+
 npm run build
+```
 
 ### 引用
 通过<script>引用编译后的文件index.umd.min.js
