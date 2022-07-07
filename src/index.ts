@@ -121,7 +121,7 @@ class SmoothSignature {
   // 编辑模式：1为画笔，0为橡皮
   doType = 1;
   // 橡皮像素范围，开启橡皮时，点击笔画会返回点击时的像素点的位置，该像素点可能不在笔画上，增加这个范围，使点击时不用那么精确，也能正常擦除笔画
-  eraserRange = 2;
+  eraserRange = 5;
   // 当前笔画顺序号，一直递增
   currOrderNo = 1;
 
@@ -229,11 +229,11 @@ class SmoothSignature {
   }
 
   // 单笔绘画函数
-  onDraw = (prePoint: any, point: any) => {
+  onDraw = (prePoint: any, point: any, color: string = this.color) => {
     if (this.openSmooth) {
-      this.drawSmoothLine(prePoint, point);
+      this.drawSmoothLine(prePoint, point, color);
     } else {
-      this.drawNoSmoothLine(prePoint, point);
+      this.drawNoSmoothLine(prePoint, point, color);
     }
   }
 
@@ -311,42 +311,29 @@ class SmoothSignature {
     this.ctx.clearRect(0, 0, this.width, this.height);
     this.drawBgColor();
     this.canDraw = true;
-    // 先把当前颜色保存下来
-    const color = this.color;
+
     // 开始重画
     for(var i = 0; i < this.strokesList.length; i++) {
       const strokes = this.strokesList[i];
       if(strokes.isShow == false) {
         continue;
       }
-      // 重画时设置颜色
-      this.color = strokes.color;
-      this.ctx.strokeStyle = this.color;
+
       for(var j = 0; j < strokes.pointsStrokes.length; j++) {
         if(j > 0) {
           const point = strokes.pointsStrokes[j];
           const prePoint = strokes.pointsStrokes[j - 1];
           if (window.requestAnimationFrame) {
-            window.requestAnimationFrame(() => this.onDraw(prePoint, point));
+            window.requestAnimationFrame(() => this.onDraw(prePoint, point, strokes.color));
           } else {
-            this.onDraw(prePoint, point);
+            this.onDraw(prePoint, point, strokes.color);
           }
         }
       }
-      this.sleep(100);
     }
-    // 还原为当前颜色
-    this.color = color;
 
     // 重画结束
     this.canDraw = false;
-  }
-
-  sleep(delay: number) {
-    const start = (new Date()).getTime();
-    while ((new Date()).getTime() - start < delay) {
-      continue;
-    }
   }
 
   // ==================================== 绘画算法：开始 ==================================== //
@@ -433,7 +420,7 @@ class SmoothSignature {
     this.points = this.points.slice(-3);
   }
 
-  drawSmoothLine = (prePoint: any, point: any) => {
+  drawSmoothLine = (prePoint: any, point: any, color: string = this.color) => {
     const dis_x = point.x - prePoint.x;
     const dis_y = point.y - prePoint.y;
     if (Math.abs(dis_x) + Math.abs(dis_y) <= this.scale) {
@@ -447,19 +434,19 @@ class SmoothSignature {
     }
     point.perLineWidth = (prePoint.lineWidth + point.lineWidth) / 2;
     if (typeof prePoint.lastX1 === 'number') {
-      this.drawCurveLine(prePoint.lastX2, prePoint.lastY2, prePoint.x, prePoint.y, point.lastX1, point.lastY1, point.perLineWidth);
+      this.drawCurveLine(prePoint.lastX2, prePoint.lastY2, prePoint.x, prePoint.y, point.lastX1, point.lastY1, point.perLineWidth, color);
       if (prePoint.isFirstPoint) return;
       if (prePoint.lastX1 === prePoint.lastX2 && prePoint.lastY1 === prePoint.lastY2) return;
       const data = this.getRadianData(prePoint.lastX1, prePoint.lastY1, prePoint.lastX2, prePoint.lastY2);
       const points1 = this.getRadianPoints(data, prePoint.lastX1, prePoint.lastY1, prePoint.perLineWidth / 2);
       const points2 = this.getRadianPoints(data, prePoint.lastX2, prePoint.lastY2, point.perLineWidth / 2);
-      this.drawTrapezoid(points1[0], points2[0], points2[1], points1[1]);
+      this.drawTrapezoid(points1[0], points2[0], points2[1], points1[1], color);
     } else {
       point.isFirstPoint = true;
     }
   }
 
-  drawNoSmoothLine = (prePoint: any, point: any) => {
+  drawNoSmoothLine = (prePoint: any, point: any, color: string = this.color) => {
     point.lastX = prePoint.x + (point.x - prePoint.x) * 0.5;
     point.lastY = prePoint.y + (point.y - prePoint.y) * 0.5;
     if (typeof prePoint.lastX === 'number') {
@@ -467,12 +454,12 @@ class SmoothSignature {
         prePoint.lastX, prePoint.lastY,
         prePoint.x, prePoint.y,
         point.lastX, point.lastY,
-        this.maxWidth
+        this.maxWidth, color
       );
     }
   }
 
-  drawCurveLine = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, lineWidth: number) => {
+  drawCurveLine = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, lineWidth: number, color: string = this.color) => {
     this.ctx.lineWidth = Number(lineWidth.toFixed(1));
     this.ctx.beginPath();
     this.ctx.moveTo(Number(x1.toFixed(1)), Number(y1.toFixed(1)));
@@ -480,16 +467,17 @@ class SmoothSignature {
       Number(x2.toFixed(1)), Number(y2.toFixed(1)),
       Number(x3.toFixed(1)), Number(y3.toFixed(1))
     );
+    this.ctx.strokeStyle = color || this.color;
     this.ctx.stroke();
   }
 
-  drawTrapezoid = (point1: any, point2: any, point3: any, point4: any) => {
+  drawTrapezoid = (point1: any, point2: any, point3: any, point4: any, color: string = this.color) => {
     this.ctx.beginPath();
     this.ctx.moveTo(Number(point1.x.toFixed(1)), Number(point1.y.toFixed(1)));
     this.ctx.lineTo(Number(point2.x.toFixed(1)), Number(point2.y.toFixed(1)));
     this.ctx.lineTo(Number(point3.x.toFixed(1)), Number(point3.y.toFixed(1)));
     this.ctx.lineTo(Number(point4.x.toFixed(1)), Number(point4.y.toFixed(1)));
-    this.ctx.fillStyle = this.color;
+    this.ctx.fillStyle = color || this.color;
     this.ctx.fill();
   }
   // ==================================== 绘画算法：结束 ==================================== //

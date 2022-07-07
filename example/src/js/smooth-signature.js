@@ -62,7 +62,7 @@
       this.onEraserEnd = function () {};
 
       this.doType = 1;
-      this.eraserRange = 2;
+      this.eraserRange = 5;
       this.currOrderNo = 1;
 
       this.setDoType = function (doType) {
@@ -157,10 +157,12 @@
       };
 
       this.onDraw = function (prePoint, point) {
+        var color = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _this.color;
+
         if (_this.openSmooth) {
-          _this.drawSmoothLine(prePoint, point);
+          _this.drawSmoothLine(prePoint, point, color);
         } else {
-          _this.drawNoSmoothLine(prePoint, point);
+          _this.drawNoSmoothLine(prePoint, point, color);
         }
       };
 
@@ -344,6 +346,7 @@
       };
 
       this.drawSmoothLine = function (prePoint, point) {
+        var color = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _this.color;
         var dis_x = point.x - prePoint.x;
         var dis_y = point.y - prePoint.y;
 
@@ -360,7 +363,7 @@
         point.perLineWidth = (prePoint.lineWidth + point.lineWidth) / 2;
 
         if (typeof prePoint.lastX1 === 'number') {
-          _this.drawCurveLine(prePoint.lastX2, prePoint.lastY2, prePoint.x, prePoint.y, point.lastX1, point.lastY1, point.perLineWidth);
+          _this.drawCurveLine(prePoint.lastX2, prePoint.lastY2, prePoint.x, prePoint.y, point.lastX1, point.lastY1, point.perLineWidth, color);
 
           if (prePoint.isFirstPoint) return;
           if (prePoint.lastX1 === prePoint.lastX2 && prePoint.lastY1 === prePoint.lastY2) return;
@@ -371,22 +374,24 @@
 
           var points2 = _this.getRadianPoints(data, prePoint.lastX2, prePoint.lastY2, point.perLineWidth / 2);
 
-          _this.drawTrapezoid(points1[0], points2[0], points2[1], points1[1]);
+          _this.drawTrapezoid(points1[0], points2[0], points2[1], points1[1], color);
         } else {
           point.isFirstPoint = true;
         }
       };
 
       this.drawNoSmoothLine = function (prePoint, point) {
+        var color = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _this.color;
         point.lastX = prePoint.x + (point.x - prePoint.x) * 0.5;
         point.lastY = prePoint.y + (point.y - prePoint.y) * 0.5;
 
         if (typeof prePoint.lastX === 'number') {
-          _this.drawCurveLine(prePoint.lastX, prePoint.lastY, prePoint.x, prePoint.y, point.lastX, point.lastY, _this.maxWidth);
+          _this.drawCurveLine(prePoint.lastX, prePoint.lastY, prePoint.x, prePoint.y, point.lastX, point.lastY, _this.maxWidth, color);
         }
       };
 
       this.drawCurveLine = function (x1, y1, x2, y2, x3, y3, lineWidth) {
+        var color = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : _this.color;
         _this.ctx.lineWidth = Number(lineWidth.toFixed(1));
 
         _this.ctx.beginPath();
@@ -395,10 +400,14 @@
 
         _this.ctx.quadraticCurveTo(Number(x2.toFixed(1)), Number(y2.toFixed(1)), Number(x3.toFixed(1)), Number(y3.toFixed(1)));
 
+        _this.ctx.strokeStyle = color || _this.color;
+
         _this.ctx.stroke();
       };
 
       this.drawTrapezoid = function (point1, point2, point3, point4) {
+        var color = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : _this.color;
+
         _this.ctx.beginPath();
 
         _this.ctx.moveTo(Number(point1.x.toFixed(1)), Number(point1.y.toFixed(1)));
@@ -409,7 +418,7 @@
 
         _this.ctx.lineTo(Number(point4.x.toFixed(1)), Number(point4.y.toFixed(1)));
 
-        _this.ctx.fillStyle = _this.color;
+        _this.ctx.fillStyle = color || _this.color;
 
         _this.ctx.fill();
       };
@@ -638,22 +647,16 @@
         // 先清屏
         this.ctx.clearRect(0, 0, this.width, this.height);
         this.drawBgColor();
-        this.canDraw = true; // 先把当前颜色保存下来
+        this.canDraw = true; // 开始重画
 
-        var color = this.color; // 开始重画
-
-        for (var i = 0; i < this.strokesList.length; i++) {
-          var strokes = this.strokesList[i];
+        var _loop = function _loop() {
+          var strokes = _this2.strokesList[i];
 
           if (strokes.isShow == false) {
-            continue;
-          } // 重画时设置颜色
+            return "continue";
+          }
 
-
-          this.color = strokes.color;
-          this.ctx.strokeStyle = this.color;
-
-          for (var j = 0; j < strokes.pointsStrokes.length; j++) {
+          for (j = 0; j < strokes.pointsStrokes.length; j++) {
             if (j > 0) {
               (function () {
                 var point = strokes.pointsStrokes[j];
@@ -661,31 +664,26 @@
 
                 if (window.requestAnimationFrame) {
                   window.requestAnimationFrame(function () {
-                    return _this2.onDraw(prePoint, point);
+                    return _this2.onDraw(prePoint, point, strokes.color);
                   });
                 } else {
-                  _this2.onDraw(prePoint, point);
+                  _this2.onDraw(prePoint, point, strokes.color);
                 }
               })();
             }
           }
+        };
 
-          this.sleep(100);
-        } // 还原为当前颜色
+        for (var i = 0; i < this.strokesList.length; i++) {
+          var j;
 
+          var _ret = _loop();
 
-        this.color = color; // 重画结束
+          if (_ret === "continue") continue;
+        } // 重画结束
+
 
         this.canDraw = false;
-      }
-    }, {
-      key: "sleep",
-      value: function sleep(delay) {
-        var start = new Date().getTime();
-
-        while (new Date().getTime() - start < delay) {
-          continue;
-        }
       } // ==================================== 绘画算法：开始 ==================================== //
 
     }]);

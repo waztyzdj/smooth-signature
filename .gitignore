@@ -5,6 +5,8 @@ miniprogram_npm
 .swan
 .vscode-swan
 
+package-lock.json
+
 # local env files
 .env.local
 .env.*.local
