@@ -11,8 +11,8 @@
     - [4、画线](#4画线)
 
 ## 前言
-工作需要客户要求在PC端实现带笔锋的手写签名，搜了多版后发现了这款smooth-signature，功能实现简单，代码也不复杂，能够满足客户需求。
-于是基于smooth-signature(https://github.com/linjc/smooth-signature.git)进行定制，在此十分感谢原作者linjc。
+工作需要客户要求在PC端实现带笔锋的手写签名，搜了多版后发现了这款[smooth-signature](https://github.com/linjc/smooth-signature.git)，功能实现简单，代码也不复杂，能够满足客户需求。
+于是基于smooth-signature进行定制，在此十分感谢原作者linjc。
 
 定制内容为：
 增加单笔擦除功能，修改撤回功能。
