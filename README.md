@@ -30,11 +30,15 @@ npm run build
 ```
 
 ### 运行Demo
+```
 cp dist/index.umd.js example/src/js/smooth-signature.js
-cd example
-npm install
-npm run dev
 
+cd example
+
+npm install
+
+npm run dev
+```
 
 ## 使用
 ```html
